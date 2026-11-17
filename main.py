@@ -1,3 +1,5 @@
+# Zack Mitra
+
 from collections import defaultdict
 from heapq import heappush, heappop 
 from math import sqrt
@@ -11,24 +13,41 @@ def prim(graph):
 
     Each tree is a set of (weight, node1, node2) tuples.    
     """
+
     def prim_helper(visited, frontier, tree):
         if len(frontier) == 0:
             return tree
         else:
             weight, node, parent = heappop(frontier)
+
             if node in visited:
                 return prim_helper(visited, frontier, tree)
             else:
                 print('visiting', node)
-                # record this edge in the tree
+
                 tree.add((weight, node, parent))
                 visited.add(node)
+
                 for neighbor, w in graph[node]:
-                    heappush(frontier, (w, neighbor, node))    
-                    # compare with dijkstra:
-                    # heappush(frontier, (distance + weight, neighbor))                
+                    heappush(frontier, (w, neighbor, node))
 
                 return prim_helper(visited, frontier, tree)
+
+    visited = set()
+    trees = []
+
+    # Run Prim's algorithm on every unvisited component
+    for source in graph:
+        if source not in visited:
+            frontier = []
+            heappush(frontier, (0, source, source))
+
+            tree = set()
+            prim_helper(visited, frontier, tree)
+
+            trees.append(tree)
+
+    return trees
         
     # pick first node as source arbitrarily
     source = list(graph.keys())[0]
@@ -52,8 +71,27 @@ def mst_from_points(points):
       a list of edges of the form (weight, node1, node2) indicating the minimum spanning
       tree connecting the cities in the input.
     """
-    ###TODO
-    pass
+
+    graph = defaultdict(set)
+
+    for city, x, y in points:
+        graph[city] = set()
+
+    for i in range(len(points)):
+        for j in range(i + 1, len(points)):
+
+            city1 = points[i][0]
+            city2 = points[j][0]
+
+            distance = euclidean_distance(points[i], points[j])
+
+            graph[city1].add((city2, distance))
+            graph[city2].add((city1, distance))
+
+    trees = prim(graph)
+
+    return list(trees[0]) if trees else []
+
 
 def euclidean_distance(p1, p2):
     return sqrt((p1[1] - p2[1])**2 + (p1[2] - p2[2])**2)
